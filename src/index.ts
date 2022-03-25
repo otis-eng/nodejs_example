@@ -1,19 +1,44 @@
-import express,{Response,Request} from "express";
-import postRouter from "./router/postRouter";
-import body_parser from "body-parser";
+import  {ExpressApp,ErrorHandler} from "./common";
+import { UserRouter } from "./User";
+import * as dotenv from "dotenv"
 
-const app = express();
 
-app.use(express.json());
-app.use(express.urlencoded({
-  extended: true
-}));
+dotenv.config();
 
-app.use("/post",postRouter);
+const SERVERPORT = process.env.PORT as string;
+const VERSION = process.env.API_VERSION as string    
+const MONGO_URI = process.env.MONGODB_URL as string
 
-app.listen(8088,() =>{
-    console.log("App listten port: "+8088);
-});
+
+export const app = new ExpressApp();
+
+
+
+
+app.useCORS("*","*").useJSON().useVersion(VERSION).useMongoDb(MONGO_URI)
+new UserRouter(app).mount()
+if(require.main === module){
+    startServer().catch((error)=>{
+        console.log(error);
+        process.exit(1)
+    })
+}
+
+async function startServer(){
+    return app.listen(SERVERPORT);
+}
+
+
+app.use(ErrorHandler);
+
+
+
+
+
+
+
+
+
 
 
 
